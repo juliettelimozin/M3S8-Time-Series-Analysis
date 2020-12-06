@@ -1,0 +1,248 @@
+%%% Template originaly created by Karol Kozioł (mail@karol-koziol.net) and modified for ShareLaTeX use
+
+\documentclass[a4paper,11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{xcolor}
+
+%\renewcommand\familydefault{\sfdefault}
+\usepackage{lmodern}
+
+\usepackage{amsmath,amssymb,amsthm,textcomp}
+\usepackage{enumerate}
+\usepackage{multicol}
+\usepackage{tikz}
+
+\usepackage{geometry}
+\geometry{left=25mm,right=25mm,%
+bindingoffset=0mm, top=20mm,bottom=20mm}
+
+
+\linespread{1.3}
+
+\newcommand{\linia}{\rule{\linewidth}{0.5pt}}
+
+% custom theorems if needed
+\newtheoremstyle{mytheor}
+    {1ex}{1ex}{\normalfont}{0pt}{\scshape}{.}{1ex}
+    {{\thmname{#1 }}{\thmnumber{#2}}{\thmnote{ (#3)}}}
+
+\theoremstyle{mytheor}
+\newtheorem{defi}{Definition}
+
+% my own titles
+\makeatletter
+\renewcommand{\maketitle}{
+\begin{center}
+\vspace{2ex}
+{\huge \textsc{\@title}}
+\vspace{1ex}
+\\
+\linia\\
+\@author \hfill \@date
+\vspace{1ex}
+\end{center}
+}
+\makeatother
+%%%
+
+% custom footers and headers
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\lhead{}
+\chead{}
+\rhead{}
+\lfoot{CID: 01343907}
+\cfoot{Time Series Analysis Coursework}
+\rfoot{Page \thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0.5pt}
+%
+
+% code listing settings
+\usepackage{listings}
+\lstset{
+    language=python,
+    basicstyle=\ttfamily\small,
+    aboveskip={1.0\baselineskip},
+    belowskip={1.0\baselineskip},
+    columns=fixed,
+    extendedchars=true,
+    breaklines=true,
+    tabsize=4,
+    prebreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+    frame=lines,
+    showtabs=false,
+    showspaces=false,
+    showstringspaces=false,
+    keywordstyle=\color[rgb]{0.627,0.126,0.941},
+    commentstyle=\color[rgb]{0.133,0.545,0.133},
+    stringstyle=\color[rgb]{01,0,0},
+    numbers=left,
+    numberstyle=\small,
+    stepnumber=1,
+    numbersep=10pt,
+    captionpos=t,
+    escapeinside={\%*}{*)}
+}
+
+%%%----------%%%----------%%%----------%%%----------%%%
+
+\begin{document}
+
+\title{Time Series Analysis Coursework 2020-2021}
+
+\author{Juliette Limozin, CID: 01343907}
+
+\date{Due 18/12/2020 at 4 pm}
+
+\maketitle
+
+\section*{Question 1}
+\subsection*{(a)}
+Our client is a 33 year old female seeking a life insurance running for 1 year. 
+
+From the National life tables, we see that the probability of her being dead next year is $q_{33} = 0.00500$.
+
+The premium is payed in full at the beginning of the contract, and at the event of death the insurance company pays out 500,000 pounds, so the expected profit of the insurance company as a function of the premium $p$ is 
+\begin{align*}
+    E(p) = p - 500000q_{33} = p- 500000*0.000500 = p - 250
+\end{align*}
+
+Since the insurance doesn't want to make a profit or a loss, we want $E(p) = 0$. So we would charge a premium of $p = £ 250$ pounds to this client.
+
+A slight issue with this calculation of the expectation is what we take as the value of $q_x$. We know from lectures that $q_{33} = \frac{d_{33}}{l_{33}}$ so using the information from the life table, we could alternatively set $q_{33} = 49.5/99063.4 = 0.00049968$. In this case, we have $E(p) = p - 249.84$ so the premium would be $p = £ 249.84$.
+
+\subsection*{(b)}
+
+Our client is a 62 year old male and would like a insurance covering him for the next 10 years.
+
+According to the life table, the expected number of people who are 62 is $l_{62} = 89426.9$. Each year for the next 10 years, there is an expected number of people of his age will die, which are the values $d_{62}$ to $d_{72}$. So the probability of this client dying within the next 10 years is
+\begin{align*}
+  _{10}q_{62} & = \frac{\text{expected number of individuals who die between ages 62 and 72}}{\text{number of individuals who have survived until age 62}} \\
+  & = \frac{d_{62} + d_{63} + d_{64} + ... + d_{72}}{l_{62}} \\
+  & = 0.154677172
+\end{align*}
+
+So the insurance company's expected profit from this client as a function of his premium $p$ is $E(p) = p - 500000_{10}q_{62} = p - 77338.58604$, hence to get $E(p) = 0$ we should charge a premium of about $p = £77,338.59$ to this client.
+
+\newpage
+
+\section*{Question 2}
+
+We observe 500 independent lives over the interval $[x,x+1)$. We assume that individual $i$ comes into view at time $x+a_i$ and is unobserved beyond time $x+b_i$. We want to estimate $\textbf{q} = (_{b_1-a_1}q_{x+a_1}, ... ,_{b_{500}-a_{500}}q_{x+a_{500}})$ by maximising the full likelihood function 
+\begin{align*}
+    L(\textbf{q}) = \prod_{i = 1}^{500}(_{b_i-a_i}q_{x+a_i})^{d_i}(1-_{b_i-a_i}q_{x+a_i})^{(1-d_i)}
+\end{align*}
+
+From lecture notes, we have:
+\begin{align*}
+   _{b_i-a_i}q_{x+a_i} = \frac{_{b_i}q_x - _{a_i}q_x}{1 - _{a_i}q_x}
+\end{align*}
+so we can rewrite the likelihood function as
+\begin{align*}
+    L(\textbf{q}) = \prod_{i = 1}^{500}\left(\frac{_{b_i}q_x - _{a_i}q_x}{1 - _{a_i}q_x}\right)^{d_i}\left(\frac{1 - _{b_i}q_x}{1 - _{a_i}q_x}\right)^{(1-d_i)}
+\end{align*}
+
+Estimating the 500 values of $\textbf{q}$ is tedious so the solution is to assume that the probabilities $_tq_x$ vary smoothly as a function of t, $0\leq t \leq 1$. The following three sections provide methods for fractional age adjustment, hence reducing the inference problem to that of estimating the single parameter $q_x$, the estimate being the value $\hat{q_x}$ that maximises $L$.
+
+\subsection*{Uniform distribution of deaths (UDD)}
+
+Assuming UDD, we have 
+\begin{align*}
+    _tq_x = tq_x, \; 0 \leq t \leq 1
+\end{align*}
+
+The likelihood function is then
+\begin{align*}
+    L(q_x) = \prod_{i = 1}^{500}\left(\frac{b_iq_x - a_iq_x}{1 - a_iq_x}\right)^{d_i}\left(\frac{1 - b_iq_x}{1 - a_iq_x}\right)^{(1-d_i)}
+\end{align*}
+
+We estimate $q_x$ by using $optimize$ in R, with the following code:
+\begin{lstlisting}[label={list:first},caption=Code to estimate $q_x$ under the UDD assumption]
+> data <- Estqx2020
+> l_udd <- function(q){
++   return(prod(((data$b*q - data$a*q)/(1-data$a*q))^data$d*((1 - data$b*q)/(1-data$a*q))^{1-data$d}))
++ }
+> optimize(l_udd, lower = 0, upper = 1, maximum = TRUE)$maximum
+[1] 0.7233351
+\end{lstlisting}
+
+Hence $\hat{q_x} = 0.7233351$ using the UDD assumption.
+
+\subsection*{Balducci assumption}
+
+Under the Balducci assumption,
+\begin{align*}
+   & _tq_x  = \frac{tq_x}{1-(1-t)q_x}, \; 0 \leq t \leq 1 \\
+   1 & - _tq_x  = \frac{1-q_x}{1-(1-t)q_x}
+\end{align*}
+
+So the rearranged likelihood function is
+\begin{align*}
+    L(q_x) & = \prod_{i = 1}^{500}\left(\left(\frac{b_iq_x}{1-(1-b_i)q_x} - \frac{a_iq_x}{1-(1-a_i)q_x}\right) \frac{1-(1-a_i)q_x}{1-q_x}\right)^{d_i}\left(\frac{1-q_x}{1-(1-b_i)q_x}\frac{1-(1-a_i)q_x}{1-q_x}\right)^{(1-d_i)} \\
+    & = \prod_{i = 1}^{500}\left(\frac{b_iq_x(1-(1-a_i)q_x)}{(1-(1-b_i)q_x)(1-q_x)} - \frac{a_iq_x}{1-q_x}\right)^{d_i}\left(\frac{1-(1-a_i)q_x}{1-(1-b_i)q_x}\right)^{(1-d_i)} \\
+    & = \prod_{i = 1}^{500}\left(\frac{b_iq_x(1-(1-a_i)q_x) - a_iq_x(1-(1-b_i)q_x)}{(1-(1-b_i)q_x)(1-q_x)}\right)^{d_i}\left(\frac{1-(1-a_i)q_x}{1-(1-b_i)q_x}\right)^{(1-d_i)}
+\end{align*}
+
+We use a similar code as before:
+\begin{lstlisting}[label={list:second},caption=Code to estimate $q_x$ under the Balducci assumption]
+> l_ba <- function(q){
++   return(prod(((data$b*q*(1 - (1-data$a)*q) - data$a*q*(1 - (1-data$b)*q))/((1 - (1-data$b)*q )*(1-q)))^data$d*((1 - (1-data$a)*q)/(1-(1-data$b)*q))^{1-data$d}))
++ }
+> optimize(l_ba, lower = 0, upper = 1, maximum = TRUE)$maximum
+[1] 0.778948
+\end{lstlisting}
+
+Hence $\hat{q_x} = 0.778948$ using the Balducci assumption.
+
+\subsection*{Constant force of mortality}
+
+Under the constant force of mortality assumption,
+\begin{align*}
+    _tq_x = 1- (1-q_x)^t, \; 0\leq t \leq 1
+\end{align*}
+
+So we get the likelihood function
+\begin{align*}
+    L(q_x) & = \prod_{i = 1}^{500}\left(\frac{1 - (1-q_x)^{b_i} -1 + (1-q_x)^{a_i}}{1 -1 + (1-q_x)^{a_i}}\right)^{d_i}\left(\frac{1 - 1 + (1-q_x)^{b_i}}{1 - 1 + (1-q_x)^{a_i}}\right)^{(1-d_i)} \\
+    & = \prod_{i = 1}^{500}\left(\frac{ - (1-q_x)^{b_i} + (1-q_x)^{a_i}}{ (1-q_x)^{a_i}}\right)^{d_i}\left(\frac{(1-q_x)^{b_i}}{ (1-q_x)^{a_i}}\right)^{(1-d_i)} \\
+    & = \prod_{i = 1}^{500}\left(1 - (1-q_x)^{b_i - a_i} \right)^{d_i}\left((1-q_x)^{b_i -a_i}\right)^{(1-d_i)}\\
+    & = \prod_{i = 1}^{500}\left( 1- (1-q_x)^{b_i - a_i} \right)^{d_i}(1-q_x)^{(1-d_i)(b_i -a_i)}
+\end{align*}
+
+We use a similar code as before:
+\begin{lstlisting}[label={list:second},caption=Code to estimate $q_x$ under the constant force of mortality assumption]
+> l_cfm <- function(q){
++   return(prod((1-(1-q)^{data$b-data$a})^data$d*(1-q)^{(1-data$d)*(data$b-data$a)}))
++ }
+> optimize(l_cfm, lower = 0, upper = 1, maximum = TRUE)$maximum
+[1] 0.7552155
+\end{lstlisting}
+
+Hence $\hat{q_x} = 0.7552155$ using the constant force of mortality assumption.
+
+\vspace{5ex}
+
+I plotted $_tq_x$ under each assumptions fixing $q_x$ as the three estimates we obtained:
+
+\begin{figure}[h!]
+\centering
+\begin{minipage}[t]{0.45\linewidth}
+    \includegraphics[width = \linewidth]{udd.png}
+\end{minipage}
+\begin{minipage}[t]{0.45\linewidth}
+    \includegraphics[width = \linewidth]{ba.png}
+\end{minipage}
+\begin{minipage}[t]{0.45\linewidth}
+    \includegraphics[width = \linewidth]{cfm.png}
+\end{minipage}
+\caption{Model fit for Clinicians' model} 
+\label{fig5}
+\end{figure}
+
+As we can see, because our three estimates are very similar they don't affect the behaviour of $_tq_x$ under each assumptions.
+
+\end{document}
