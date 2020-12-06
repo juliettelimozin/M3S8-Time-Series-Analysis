@@ -102,18 +102,28 @@ bindingoffset=0mm, top=20mm,bottom=20mm}
 
 \section*{Question 1}
 \subsection*{(a)}
-Our client is a 33 year old female seeking a life insurance running for 1 year. 
 
-From the National life tables, we see that the probability of her being dead next year is $q_{33} = 0.00500$.
-
-The premium is payed in full at the beginning of the contract, and at the event of death the insurance company pays out 500,000 pounds, so the expected profit of the insurance company as a function of the premium $p$ is 
-\begin{align*}
-    E(p) = p - 500000q_{33} = p- 500000*0.000500 = p - 250
-\end{align*}
-
-Since the insurance doesn't want to make a profit or a loss, we want $E(p) = 0$. So we would charge a premium of $p = £ 250$ pounds to this client.
-
-A slight issue with this calculation of the expectation is what we take as the value of $q_x$. We know from lectures that $q_{33} = \frac{d_{33}}{l_{33}}$ so using the information from the life table, we could alternatively set $q_{33} = 49.5/99063.4 = 0.00049968$. In this case, we have $E(p) = p - 249.84$ so the premium would be $p = £ 249.84$.
+\begin{lstlisting}
+def S_AR(f,phis,sigma2):
+    """
+    INPUTS
+    f: a vector of frequencies at which to evaluate the spectral density function.
+    phis: the vector [φ1,p, ..., φp,p].
+    sigma2: the variance of the white noise.
+    OUTPUT:
+    S: a vector of values of the spectral density function evaluated at the elements of f.
+    """
+    if str(type(phis)) != "<class 'numpy.ndarray'>" :
+        raise ValueError('Please input a numpy array for phis')
+    p = len(phis) #Determine p
+    A = np.concatenate((np.array([1]), -phis), axis = 0)
+    exps = np.exp(-1j*2*np.pi*np.asarray(range(0,p+1), dtype = 'complex'))
+    S = [sigma2/np.dot(A, exps**i) for i in f]
+    
+    return S
+    
+    return S
+\end{lstlisting}
 
 \subsection*{(b)}
 
