@@ -127,16 +127,17 @@ def S_AR(f,phis,sigma2):
 
 \subsection*{(b)}
 
-Our client is a 62 year old male and would like a insurance covering him for the next 10 years.
-
-According to the life table, the expected number of people who are 62 is $l_{62} = 89426.9$. Each year for the next 10 years, there is an expected number of people of his age will die, which are the values $d_{62}$ to $d_{72}$. So the probability of this client dying within the next 10 years is
-\begin{align*}
-  _{10}q_{62} & = \frac{\text{expected number of individuals who die between ages 62 and 72}}{\text{number of individuals who have survived until age 62}} \\
-  & = \frac{d_{62} + d_{63} + d_{64} + ... + d_{72}}{l_{62}} \\
-  & = 0.154677172
-\end{align*}
-
-So the insurance company's expected profit from this client as a function of his premium $p$ is $E(p) = p - 500000_{10}q_{62} = p - 77338.58604$, hence to get $E(p) = 0$ we should charge a premium of about $p = £77,338.59$ to this client.
+\begin{lstlisting}
+def AR2_sim(phis,sigma2,N):
+    et = np.random.normal(0, np.sqrt(sigma2), 100+N)
+    X = np.zeros(100+N)
+    for t in range(2,100+N):
+        X[t] = phis[0]*X[t-1]+phis[1]*X[t-2]+et[t]
+    
+    X = X[100:]
+    
+    return X
+\end{lstlisting}
 
 \newpage
 
