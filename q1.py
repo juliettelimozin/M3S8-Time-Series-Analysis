@@ -33,5 +33,14 @@ def S_AR(f,phis,sigma2):
     
     return S
 
+def AR2_sim(phis,sigma2,N):
+    et = np.random.normal(0, np.sqrt(sigma2), 100+N)
+    X = np.zeros(100+N)
+    for t in range(2,100+N):
+        X[t] = phis[0]*X[t-1]+phis[1]*X[t-2]+et[t]
+    
+    X = X[100:]
+    
+    return X
 
         
