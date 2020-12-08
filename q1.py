@@ -6,24 +6,11 @@ Created on Sun Dec  6 17:20:25 2020
 @author: juliette
 """
 import numpy as np
+from scipy.fft import fft
+
+######################### QUESTION 1 #########################################
 
 def S_AR(f,phis,sigma2):
-    """
-    Write a function S_AR(f,phis,sigma2) that evaluates the parametric 
-    form of the spectral density function for an AR(p) process on a designated 
-    set of frequencies.
-    The inputs should be:
-    f: a vector of frequencies at which to evaluate the spectral density 
-    function.
-    phis: the vector [φ1,p, ..., φp,p].
-    sigma2: the variance of the white noise.
-    Your function should not take p as an input, but instead determine 
-    it from the stated input
-    parameters.
-    It should return a single output:
-    S: a vector of values of the spectral density function evaluated at the 
-    elements of f.
-    """
     if str(type(phis)) != "<class 'numpy.ndarray'>" :
         raise ValueError('Please input a numpy array for phis')
     p = len(phis) #Determine p
@@ -42,5 +29,60 @@ def AR2_sim(phis,sigma2,N):
     X = X[100:]
     
     return X
+
+def acvs_hat(X,tau):
+    N = len(X)
+    s = np.zeros(len(tau))
+    for i in range(len(tau)):
+        s[i] = (1/N)*np.dot(X[:N-tau[i]], X[tau[i]:])
+    
+    return s
+
+######################### QUESTION 2 #########################################
+
+def periodogram(X):
+    N = len(X)
+    S = (1/N)*np.abs(fft(X))**2
+    
+    return S
+
+def direct(X):
+    N = len(X)
+    t = np.array(range(1,N+1))
+    h = 0.5*(8/(3*(N+1)))**0.5 * (1-np.cos(2*np.pi*t/(N+1)))
+    
+    S = (1/N)*np.abs(fft(np.multiply(h,X)))**2
+    
+    return S
+
+def question2b():
+    N = [32, 64, 128, 256, 512, 1000, 1024, 2048 , 4096]
+    phis = np.array([2*0.95*np.cos(np.pi/4), -0.95**2])
+    
+    bias_p = np.zeros((3,len(N)))
+    bias_d = np.zeros((3,len(N)))
+    for j in range(len(N)):
+        S_p = np.zeros((3,N[j]))
+        S_d = np.zeros((3,N[j]))
+        for i in range(N[j]):
+            X = AR2_sim(phis,1,16)
+            Sp = periodogram(X)
+            Sd = direct(X)
+            S_p[0,i] = Sp[2]
+            S_p[1,i] = Sp[4]
+            S_p[2,i] = Sp[6]
+            S_d[0,i] = Sd[2]
+            S_d[1,i] = Sd[4]
+            S_d[2,i] = Sd[6]
+            
+        f = [1/8, 2/8, 3/8]
+        S = S_AR(f, phis, 1)
+        for i in range(3):
+            bias_p[i,j] = np.mean(S_p[i,:])-S[i]
+            bias_d[i,j] = np.mean(S_d[i,:])-S[i]
+            
+    print(bias_p)
+    print(bias_d)
+
 
         
