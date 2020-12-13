@@ -9,7 +9,7 @@
 
 %\renewcommand\familydefault{\sfdefault}
 \usepackage{lmodern}
-
+\usepackage{booktabs}
 \usepackage{amsmath,amssymb,amsthm,textcomp}
 \usepackage{enumerate}
 \usepackage{multicol}
@@ -64,7 +64,7 @@ bindingoffset=0mm, top=20mm,bottom=20mm}
 % code listing settings
 \usepackage{listings}
 \lstset{
-    language=python,
+    language=Python,
     basicstyle=\ttfamily\small,
     aboveskip={1.0\baselineskip},
     belowskip={1.0\baselineskip},
@@ -122,6 +122,7 @@ def S_AR(f,phis,sigma2):
     
     return S
 \end{lstlisting}
+
 \subsection*{(b)}
 
 \begin{lstlisting}
@@ -137,122 +138,138 @@ def AR2_sim(phis,sigma2,N):
 \end{lstlisting}
 
 \subsection*{(c)}
-
+\begin{lstlisting}
+def acvs_hat(X,tau):
+    N = len(X)
+    s = np.zeros(len(tau))
+    for i in range(len(tau)):
+        s[i] = (1/N)*np.dot(X[:N-tau[i]], X[tau[i]:])
+    
+    return s
+\end{lstlisting}
 \newpage
 
 \section*{Question 2}
 
-We observe 500 independent lives over the interval $[x,x+1)$. We assume that individual $i$ comes into view at time $x+a_i$ and is unobserved beyond time $x+b_i$. We want to estimate $\textbf{q} = (_{b_1-a_1}q_{x+a_1}, ... ,_{b_{500}-a_{500}}q_{x+a_{500}})$ by maximising the full likelihood function 
-\begin{align*}
-    L(\textbf{q}) = \prod_{i = 1}^{500}(_{b_i-a_i}q_{x+a_i})^{d_i}(1-_{b_i-a_i}q_{x+a_i})^{(1-d_i)}
-\end{align*}
+\subsection{(a)}
 
-From lecture notes, we have:
-\begin{align*}
-   _{b_i-a_i}q_{x+a_i} = \frac{_{b_i}q_x - _{a_i}q_x}{1 - _{a_i}q_x}
-\end{align*}
-so we can rewrite the likelihood function as
-\begin{align*}
-    L(\textbf{q}) = \prod_{i = 1}^{500}\left(\frac{_{b_i}q_x - _{a_i}q_x}{1 - _{a_i}q_x}\right)^{d_i}\left(\frac{1 - _{b_i}q_x}{1 - _{a_i}q_x}\right)^{(1-d_i)}
-\end{align*}
+\begin{lstlisting}
+def periodogram(X):
+    N = len(X)
+    S = (1/N)*np.abs(fft(X))**2
+    
+    return S
 
-Estimating the 500 values of $\textbf{q}$ is tedious so the solution is to assume that the probabilities $_tq_x$ vary smoothly as a function of t, $0\leq t \leq 1$. The following three sections provide methods for fractional age adjustment, hence reducing the inference problem to that of estimating the single parameter $q_x$, the estimate being the value $\hat{q_x}$ that maximises $L$.
-
-\subsection*{Uniform distribution of deaths (UDD)}
-
-Assuming UDD, we have 
-\begin{align*}
-    _tq_x = tq_x, \; 0 \leq t \leq 1
-\end{align*}
-
-The likelihood function is then
-\begin{align*}
-    L(q_x) = \prod_{i = 1}^{500}\left(\frac{b_iq_x - a_iq_x}{1 - a_iq_x}\right)^{d_i}\left(\frac{1 - b_iq_x}{1 - a_iq_x}\right)^{(1-d_i)}
-\end{align*}
-
-We estimate $q_x$ by using $optimize$ in R, with the following code:
-\begin{lstlisting}[label={list:first},caption=Code to estimate $q_x$ under the UDD assumption]
-> data <- Estqx2020
-> l_udd <- function(q){
-+   return(prod(((data$b*q - data$a*q)/(1-data$a*q))^data$d*((1 - data$b*q)/(1-data$a*q))^{1-data$d}))
-+ }
-> optimize(l_udd, lower = 0, upper = 1, maximum = TRUE)$maximum
-[1] 0.7233351
+def direct(X):
+    N = len(X)
+    t = np.array(range(1,N+1))
+    h = 0.5*(8/(3*(N+1)))**0.5 * (1-np.cos(2*np.pi*t/(N+1)))
+    
+    S = (1/N)*np.abs(fft(np.multiply(h,X)))**2
+    
+    return S
 \end{lstlisting}
 
-Hence $\hat{q_x} = 0.7233351$ using the UDD assumption.
 
-\subsection*{Balducci assumption}
+\newpage
 
-Under the Balducci assumption,
-\begin{align*}
-   & _tq_x  = \frac{tq_x}{1-(1-t)q_x}, \; 0 \leq t \leq 1 \\
-   1 & - _tq_x  = \frac{1-q_x}{1-(1-t)q_x}
-\end{align*}
+\section*{Question 3}
+\subsection*{(a)}
 
-So the rearranged likelihood function is
-\begin{align*}
-    L(q_x) & = \prod_{i = 1}^{500}\left(\left(\frac{b_iq_x}{1-(1-b_i)q_x} - \frac{a_iq_x}{1-(1-a_i)q_x}\right) \frac{1-(1-a_i)q_x}{1-q_x}\right)^{d_i}\left(\frac{1-q_x}{1-(1-b_i)q_x}\frac{1-(1-a_i)q_x}{1-q_x}\right)^{(1-d_i)} \\
-    & = \prod_{i = 1}^{500}\left(\frac{b_iq_x(1-(1-a_i)q_x)}{(1-(1-b_i)q_x)(1-q_x)} - \frac{a_iq_x}{1-q_x}\right)^{d_i}\left(\frac{1-(1-a_i)q_x}{1-(1-b_i)q_x}\right)^{(1-d_i)} \\
-    & = \prod_{i = 1}^{500}\left(\frac{b_iq_x(1-(1-a_i)q_x) - a_iq_x(1-(1-b_i)q_x)}{(1-(1-b_i)q_x)(1-q_x)}\right)^{d_i}\left(\frac{1-(1-a_i)q_x}{1-(1-b_i)q_x}\right)^{(1-d_i)}
-\end{align*}
-
-We use a similar code as before:
-\begin{lstlisting}[label={list:second},caption=Code to estimate $q_x$ under the Balducci assumption]
-> l_ba <- function(q){
-+   return(prod(((data$b*q*(1 - (1-data$a)*q) - data$a*q*(1 - (1-data$b)*q))/((1 - (1-data$b)*q )*(1-q)))^data$d*((1 - (1-data$a)*q)/(1-(1-data$b)*q))^{1-data$d}))
-+ }
-> optimize(l_ba, lower = 0, upper = 1, maximum = TRUE)$maximum
-[1] 0.778948
-\end{lstlisting}
-
-Hence $\hat{q_x} = 0.778948$ using the Balducci assumption.
-
-\subsection*{Constant force of mortality}
-
-Under the constant force of mortality assumption,
-\begin{align*}
-    _tq_x = 1- (1-q_x)^t, \; 0\leq t \leq 1
-\end{align*}
-
-So we get the likelihood function
-\begin{align*}
-    L(q_x) & = \prod_{i = 1}^{500}\left(\frac{1 - (1-q_x)^{b_i} -1 + (1-q_x)^{a_i}}{1 -1 + (1-q_x)^{a_i}}\right)^{d_i}\left(\frac{1 - 1 + (1-q_x)^{b_i}}{1 - 1 + (1-q_x)^{a_i}}\right)^{(1-d_i)} \\
-    & = \prod_{i = 1}^{500}\left(\frac{ - (1-q_x)^{b_i} + (1-q_x)^{a_i}}{ (1-q_x)^{a_i}}\right)^{d_i}\left(\frac{(1-q_x)^{b_i}}{ (1-q_x)^{a_i}}\right)^{(1-d_i)} \\
-    & = \prod_{i = 1}^{500}\left(1 - (1-q_x)^{b_i - a_i} \right)^{d_i}\left((1-q_x)^{b_i -a_i}\right)^{(1-d_i)}\\
-    & = \prod_{i = 1}^{500}\left( 1- (1-q_x)^{b_i - a_i} \right)^{d_i}(1-q_x)^{(1-d_i)(b_i -a_i)}
-\end{align*}
-
-We use a similar code as before:
-\begin{lstlisting}[label={list:second},caption=Code to estimate $q_x$ under the constant force of mortality assumption]
-> l_cfm <- function(q){
-+   return(prod((1-(1-q)^{data$b-data$a})^data$d*(1-q)^{(1-data$d)*(data$b-data$a)}))
-+ }
-> optimize(l_cfm, lower = 0, upper = 1, maximum = TRUE)$maximum
-[1] 0.7552155
-\end{lstlisting}
-
-Hence $\hat{q_x} = 0.7552155$ using the constant force of mortality assumption.
-
-\vspace{5ex}
-
-I plotted $_tq_x$ under each assumptions fixing $q_x$ as the three estimates we obtained:
+Figure \ref{plot3a} shows the plots of the periodogram and the direct spectral estimate using the Hanning taper of my time series.
 
 \begin{figure}[h!]
-\centering
-\begin{minipage}[t]{0.45\linewidth}
-    \includegraphics[width = \linewidth]{udd.png}
-\end{minipage}
-\begin{minipage}[t]{0.45\linewidth}
-    \includegraphics[width = \linewidth]{ba.png}
-\end{minipage}
-\begin{minipage}[t]{0.45\linewidth}
-    \includegraphics[width = \linewidth]{cfm.png}
-\end{minipage}
-\caption{Model fit for Clinicians' model} 
-\label{fig5}
+    \includegraphics[width=\columnwidth]{plot3a.png}
+    \caption{Plots for Question 3(a)}
+    \label{plot3a}
 \end{figure}
 
-As we can see, because our three estimates are very similar they don't affect the behaviour of $_tq_x$ under each assumptions.
+\subsection*{(b)}
 
+The following is my code for fitting a AR(p) model using the Yule-Walker, Least Squares and approximate maximum likelihood methoods. 
+
+\begin{lstlisting}
+def yule_walker(X,p):
+    s_hat = acvs_hat(X, list(range(0,p+1)))
+    gamma = s_hat[1:]
+    Gamma = toeplitz(s_hat[:-1], s_hat[:-1])
+    phi_hat = np.linalg.inv(Gamma).dot(gamma)
+    sigma2_hat = s_hat[0] - np.dot(phi_hat,s_hat[1:])
+    
+    return phi_hat, sigma2_hat
+
+def least_squares(X,p):
+    N = len(X)
+    F = np.zeros((N-p,p))
+    for i in range(p):
+        F[:,i] = X[(p-i-1):(N-1-i)]
+    phi_hat = np.linalg.inv(F.T.dot(F)).dot(F.T).dot(X[p:])
+    sigma2_hat = (1/(N-2*p))*(X[p:]-F.dot(phi_hat)).T.dot(X[p:]-F.dot(phi_hat))
+    
+    return phi_hat, sigma2_hat
+
+def approx_mle(X,p):
+    N = len(X)
+    phi_hat, sigma2_hat = least_squares(X, p)
+    sigma2_hat = sigma2_hat *(N-2*p)/(N-p)
+    
+    return phi_hat, sigma2_hat
+\end{lstlisting}
+
+\subsection*{(c)}
+
+The information on the AIC for each model method and parameter is summarised in the table below. \\
+
+\begin{tabular}{lrrr}
+\toprule
+{} &  Yule-Walker &  Least Squares &  Approximate MLE \\
+\midrule
+p = 1  &    83.457568 &      79.308525 &        78.296662 \\
+p = 2  &    67.210892 &      62.744916 &        60.696873 \\
+p = 3  &    42.897565 &      35.014882 &        31.905417 \\
+p = 4  &    10.712505 &     -22.692807 &       -26.889905 \\
+p = 5  &    11.667585 &     -23.526619 &       -28.838585 \\
+p = 6  &    12.558746 &     -19.564828 &       -26.019978 \\
+p = 7  &    13.945686 &     -16.908833 &       -24.536622 \\
+p = 8  &    15.673155 &     -13.065779 &       -21.896866 \\
+p = 9  &    16.615987 &     -11.939696 &       -22.006017 \\
+p = 10 &    18.121540 &     -11.858851 &       -23.193686 \\
+p = 11 &    19.796076 &      -7.995110 &       -20.633170 \\
+p = 12 &    21.759412 &      -7.187960 &       -21.165469 \\
+p = 13 &    22.142904 &      -5.101213 &       -20.456005 \\
+p = 14 &    23.842761 &      -3.255814 &       -20.027431 \\
+p = 15 &    25.429476 &       0.521702 &       -17.708102 \\
+p = 16 &    26.306425 &       2.717655 &       -17.013632 \\
+p = 17 &    26.731132 &       3.343002 &       -17.935132 \\
+p = 18 &    28.727868 &       5.515377 &       -17.357172 \\
+p = 19 &    30.279313 &       8.161516 &       -16.355375 \\
+p = 20 &    31.917098 &      12.468884 &       -13.744801 \\
+\bottomrule
+\end{tabular}
+
+\subsection*{(d)}
+We choose the order of model with the lowest AIC score for each method.
+
+Hence we choose $p = 4$ for the Yule-Walker model, and $p=5$ for both the Least Squares and approximate maximum likelihood models.
+
+The corresponding parameter estimates are shown in the table below, up to 4 decimal points. \\
+
+\begin{tabular}{llll}
+\toprule
+{} &Yule-Walker & Least Squares & Approximate MLE \\
+\midrule
+$\hat{\mathbf{\phi}}$    &  \parbox{3cm}{[-1.5452, -1.2955, -1.0781, -0.4841]} &  \parbox{3.75cm}{[-1.7241, -1.6180, -1.4260, -0.7367, -0.0647]} &  \parbox{3.75cm}{[-1.7241, -1.6180, -1.4260, -0.7367, -0.0647]} \\
+$\hat{\sigma}^2$ &  1.0214 &  0.7696 &  0.7383 \\
+\bottomrule
+\end{tabular}
+
+\subsection*{(e)}
+
+Figure \ref{plot3e} shows the associated spectral density function for each of the three selected models.
+
+\begin{figure}[h!]
+    \includegraphics{plot_3e.png}
+    \caption{Plot for Question 3(e)}
+    \label{plot3e}
+\end{figure}
 \end{document}
