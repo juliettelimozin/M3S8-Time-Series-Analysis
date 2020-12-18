@@ -10,6 +10,8 @@ from scipy.fft import fft, fftshift
 from scipy.linalg import toeplitz
 import pandas as pd
 import matplotlib.pyplot as plt
+import random
+random.seed(123)
 
 pd.set_option('display.max_colwidth', 0)
 ######################### QUESTION 1 #########################################
@@ -128,11 +130,11 @@ def question2b():
         S_p = np.zeros((3,10000))
         S_d = np.zeros((3,10000))
         #generate time series
-        X = AR2_sim(phis,1,N[j])
         for i in range(10000):
+            X_r = AR2_sim(phis,1,N[j])          
             #loop for 10000 realisations
-            Sp = periodogram(X)
-            Sd = direct(X)
+            Sp = periodogram(X_r)
+            Sd = direct(X_r)
             S_p[:,i] = np.array([Sp[2**(j+1)], Sp[2**(j+2)], Sp[6*2**j]]).T
             
             S_d[:,i] = np.array([Sd[2**(j+1)], Sd[2**(j+2)], Sd[6*2**j]]).T
@@ -217,7 +219,7 @@ def question3a(X):
     t = np.array(range(1,N+1))
     h = 0.5*(8/(3*(N+1)))**0.5 * (1-np.cos(2*np.pi*t/(N+1)))
     
-    S_d = (1/N)*np.abs(fftshift(fft(np.multiply(h,X))))**2
+    S_d = np.abs(fftshift(fft(np.multiply(h,X))))**2
     
     
     #Plots
