@@ -101,6 +101,19 @@ bindingoffset=0mm, top=15mm,bottom=15mm}
 \maketitle
 
 \textit{This is my own unaided work unless stated otherwise.} 
+
+\section*{Packages used}
+
+\begin{lstlisting}
+import numpy as np
+from scipy.fft import fft, fftshift
+from scipy.linalg import toeplitz
+import pandas as pd
+import matplotlib.pyplot as plt
+import random
+random.seed(123)
+pd.set_option('display.max_colwidth', 0)
+\end{lstlisting}
 \section*{Question 1}
 \subsection*{(a)}
 
@@ -150,9 +163,7 @@ def AR2_sim(phis,sigma2,N):
     for t in range(2,100+N):
         #loop to define each element X_t
         X[t] = phis[0]*X[t-1]+phis[1]*X[t-2]+et[t]
-    
     X = X[100:] #discard first 100 values
-    
     return X
 \end{lstlisting}
 
@@ -182,10 +193,8 @@ def acvs_hat(X,tau):
     for i in range(len(tau)):
         #loop to define each s_tau
         s[i] = (1/N)*np.dot(X[:N-tau[i]], X[tau[i]:])
-    
     return s
 \end{lstlisting}
-\clearpage
 
 \section*{Question 2}
 
@@ -205,9 +214,7 @@ def periodogram(X):
     N = len(X)
     #Compute periodogram using fft
     S = (1/N)*np.abs(fft(X))**2
-    
     return S
-
 def direct(X):
     """
     INPUT:
@@ -218,14 +225,11 @@ def direct(X):
     """
     #Define length of the time series
     N = len(X)
-    
     #Define the Hanning taper
     t = np.array(range(1,N+1))
     h = 0.5*(8/(3*(N+1)))**0.5 * (1-np.cos(2*np.pi*t/(N+1)))
-    
     #Compute the direct spectral estimate using the taper and fft
     S = np.abs(fft(np.multiply(h,X)))**2
-    
     return S
 \end{lstlisting}
 
@@ -248,9 +252,6 @@ Figure \ref{plot2b} shows the plots of the bias of the periodogram and direct sp
 
 \begin{lstlisting}
 def question2b():
-    """
-    Code for question 2b
-    """
     #vector of sample sizes to test
     N = [16, 32, 64, 128, 256, 512, 1024, 2048 , 4096]
     #[phi_1,2, phi_2,2,]
@@ -259,7 +260,6 @@ def question2b():
     #true spectral density at these frequencies
     f = [1/8, 2/8, 3/8]
     S = S_AR(f, phis, 1)
-    
     #initialise matrices containing bias for each frequency and sample size
     #and estimation method
     bias_p = np.zeros((3,len(N)))
@@ -268,23 +268,19 @@ def question2b():
         #loop for each sample size
         S_p = np.zeros((3,10000))
         S_d = np.zeros((3,10000))
-        #generate time series
-        X = AR2_sim(phis,1,N[j])
         for i in range(10000):
+            #generate time series
+            X_r = AR2_sim(phis,1,N[j])          
             #loop for 10000 realisations
-            Sp = periodogram(X)
-            Sd = direct(X)
+            Sp = periodogram(X_r)
+            Sd = direct(X_r)
             S_p[:,i] = np.array([Sp[2**(j+1)], Sp[2**(j+2)], Sp[6*2**j]]).T
-            
             S_d[:,i] = np.array([Sd[2**(j+1)], Sd[2**(j+2)], Sd[6*2**j]]).T
- 
         #calculate bias
         bias_p[:,j] = np.mean(S_p, axis = 1) - np.array(S).T
         bias_d[:,j] = np.mean(S_d, axis = 1) - np.array(S).T
-    
     #plots
     plt.figure(figsize = (15,20))
-    
     plt.subplot(311)
     plt.plot(np.log(N), bias_p[0,:], label = 'Periodogram')
     plt.plot(np.log(N), bias_d[0,:], label = 'Direct spectral estimate')
@@ -293,7 +289,6 @@ def question2b():
     plt.ylabel('Bias')
     plt.title('Bias of spectral estimators at frequency 1/8 for different' +
               ' values of N')
-    
     plt.subplot(312)
     plt.plot(np.log(N), bias_p[1,:], label = 'Periodogram')
     plt.plot(np.log(N), bias_d[1,:], label = 'Direct spectral estimate')
@@ -302,7 +297,6 @@ def question2b():
     plt.ylabel('Bias')
     plt.title('Bias of spectral estimators at frequency 2/8 for different' +
               ' values of N')
-    
     plt.subplot(313)
     plt.plot(np.log(N), bias_p[2,:], label = 'Periodogram')
     plt.plot(np.log(N), bias_d[2,:], label = 'Direct spectral estimate')
@@ -311,12 +305,25 @@ def question2b():
     plt.ylabel('Bias')
     plt.title('Bias of spectral estimators at frequency 3/8 for different' +
               ' values of N')
-    
     plt.show()
-    
     return None
 \end{lstlisting}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.85\columnwidth]{plot2b.png}
+    \caption{Plot of biases for question 2(b)}
+    \label{plot2b}
+\end{figure}
+
 \subsection*{(c)}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width = 0.4\columnwidth]{plot2c.png}
+    \caption{Plot of the true spectral density for question 2(c)}
+    \label{plot2c}
+\end{figure}
 
 From lecture notes we know that because the periodogram and direct spectral estimates are consistent estimates of the spectral density function, as $N \rightarrow \infty$, $E(\hat{S}(f)) \rightarrow S(f)$. Therefore, $\lim_{N\rightarrow \infty}bias = \lim_{N\rightarrow \infty}E(\hat{S}(f)) - S(f) = 0 $, which we can see in the plots of the bias of the estimates at frequencies $[1/8, 2/8, 3/8]$ in figure \ref{plot2b}, as they all converge to 0.\\
 
@@ -325,19 +332,6 @@ Notice that for frequency $f = 1/8$, the biases are converging to 0 from below w
 As we can see, the spectral density moves towards $S(1/8)$ from below and towards $S(2/8)$ and $S(3/8)$ from above, which explains the equivalent behaviour for the bias.\\
 
 We also note that direct spectral estimate using tapering has a lower bias than the periodogram. From lecture notes we know that this is because the tapering is specifically a bias reducing technique on the periodogram.
-\begin{figure}
-    \centering
-    \includegraphics[width=0.9\columnwidth]{plot2b.png}
-    \caption{Plot of biases for question 2(b)}
-    \label{plot2b}
-\end{figure}
-
-\begin{figure}
-    \centering
-    \includegraphics{plot2c.png}
-    \caption{Plot of the true spectral density for question 2(c)}
-    \label{plot2c}
-\end{figure}
 
 \begin{lstlisting}
 def question2c():
@@ -360,15 +354,13 @@ def question2c():
     plt.show()
     return None
 \end{lstlisting}
-\clearpage
-
 
 \section*{Question 3}
 \subsection*{(a)}
 
 Figure \ref{plot3a} shows the plots of the periodogram and the direct spectral estimate using the Hanning taper of my time series. The code is the same as \texttt{periodogram} and \texttt{direct} from question 2(a), but with an added \texttt{fftshift} to get the spectral density estimate on frequencies $[-1/2, 1/2]$.
 
-\begin{figure}[h!]
+\begin{figure}[b!]
     \centering
     \includegraphics[width=\columnwidth]{plot3a.png}
     \caption{Plots of spectral density estimates for question 3(a)}
@@ -385,14 +377,10 @@ def question3a(X):
     N = len(X)
     #compute periodogram with fftshift
     S_p = (1/N)*np.abs(fftshift(fft(X)))**2
-    
     #Compute tapered direct spectral estimate with fftshift
     t = np.array(range(1,N+1))
     h = 0.5*(8/(3*(N+1)))**0.5 * (1-np.cos(2*np.pi*t/(N+1)))
-    
-    S_d = (1/N)*np.abs(fftshift(fft(np.multiply(h,X))))**2
-    
-    
+    S_d = np.abs(fftshift(fft(np.multiply(h,X))))**2
     #Plots
     f = [i/128 for i in range(-64,64)]
     plt.figure(figsize = (20,10))
@@ -401,7 +389,6 @@ def question3a(X):
     plt.xlabel('frequencies f')
     plt.ylabel('Periodogram')
     plt.title('Periodogram of my time series at frequencies [-0.5,0.5]')
-    
     plt.subplot(122)
     plt.plot(f, S_d)
     plt.xlabel('frequencies f')
@@ -435,9 +422,7 @@ def yule_walker(X,p):
     #compute phi_hat and sigma2_hat
     phi_hat = np.linalg.inv(Gamma).dot(gamma)
     sigma2_hat = s_hat[0] - np.dot(phi_hat,s_hat[1:])
-    
     return phi_hat, sigma2_hat
-
 def least_squares(X,p):
     """
     INPUT:
@@ -457,9 +442,7 @@ def least_squares(X,p):
     phi_hat = np.linalg.inv(F.T.dot(F)).dot(F.T).dot(X[p:])
     #Compute sigma2_hat
     sigma2_hat = (1/(N-2*p))*(X[p:]-F.dot(phi_hat)).T.dot(X[p:]-F.dot(phi_hat))
-    
     return phi_hat, sigma2_hat
-
 def approx_mle(X,p):
     """
     INPUT:
@@ -476,7 +459,6 @@ def approx_mle(X,p):
     phi_hat, sigma2_hat = least_squares(X, p)
     #Transform least squares estimator of sigma2 into approximate MLE
     sigma2_hat = sigma2_hat *(N-2*p)/(N-p)
-    
     return phi_hat, sigma2_hat
 \end{lstlisting}
 
@@ -531,13 +513,11 @@ def question3c(X):
         sigma2s = np.array([s_y, s_l, s_m])
         ps = np.array([p, p, p])
         AIC[p-1,:] = 2*ps.T + N*np.log(sigma2s.T)
-    
     #Summarise in a pandas DataFrame
     data_AIC = pd.DataFrame(data = AIC, 
                             index = ["p = "+ str(i) for i in range(1,21)],
                             columns = ['Yule-Walker', 
                                        'Least Squares', 'Approximate MLE'])
-    
     return data_AIC
 \end{lstlisting}
 
@@ -577,12 +557,20 @@ def question3d(X):
                                index = ['phi_hat', 'sigma2_hat'],
                                columns = ['Yule-Walker', 
                                        'Least Squares', 'Approximate MLE'])
+   
     return data_params
 \end{lstlisting}
 
 \subsection*{(e)}
 
 Figure \ref{plot3e} shows the associated spectral density function for each of the three selected models.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width = 0.6\columnwidth]{plot_3e.png}
+    \caption{Plot of spectral densities for question 3(e)}
+    \label{plot3e}
+\end{figure}
 
 \begin{lstlisting}
 def question 3e(X):
@@ -597,16 +585,13 @@ def question 3e(X):
     py, sy = yule_walker(X,4)
     pl,sl = least_squares(X, 5)
     pm,sm = approx_mle(X, 5)
-    
     #Compute spectral densities
     f = [i/128 for i in range(-64,65)]
     S_y = S_AR(f, py, sy)
     S_l = S_AR(f, pl, sl)
     S_m = S_AR(f, pm, sm)
-    
     #plots
     fig, ax = plt.subplots(3, 1, sharex = True, sharey = True, figsize = (7,10))
-
     ax[0].plot(f, S_y, label = 'Yule-Walker')
     ax[0].set_title('Yule-Walker')
     ax[1].plot(f, S_l, label = 'Least Squares')
@@ -619,18 +604,9 @@ def question 3e(X):
     fig.text(0.04, 0.5, 'Spectral density', va='center', ha='center', 
              rotation='vertical')
     plt.show()
-    
     return py, pl, pm
 \end{lstlisting}
 
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width = 0.6\columnwidth]{plot_3e.png}
-    \caption{Plot of spectral densities for question 3(e)}
-    \label{plot3e}
-\end{figure}
-
-\clearpage
 \section*{Question 4}
 
 The table below comapres the actual values $X_119,...,  X_128$ to the forecast values, using the model parameters obtained from YW, LS and ML in question 3. I used the formula
@@ -685,7 +661,6 @@ def question4(X):
     """
     #Get fitted parameters
     py, pl, pm = question3e(X)
-    
     #Create matrix to contain actual and forecast values
     X_f = np.zeros((128,4))
     X_f[:,0] = X
@@ -696,18 +671,14 @@ def question4(X):
         #Loop to calculate forecast values for each method
         X_f[118 + i,1] = py[0]*X_f[118 + i-1,1] +py[1]*X_f[118 + i-2,1] \
             + py[2]*X_f[118 + i-3,1]+ py[3]*X_f[118 + i-4,1]
-            
         X_f[118 + i,2] = pl[0]*X_f[118 + i-1,2] +pl[1]*X_f[118 + i-2,2] \
             + pl[2]*X_f[118 + i-3,2]+ pl[3]*X_f[118 + i-4,2] \
                 + pl[4]*X_f[118 + i-5,2]
-            
         X_f[118 + i,3] = pm[0]*X_f[118 + i-1,3] +pm[1]*X_f[118 + i-2,3] \
             + pm[2]*X_f[118 + i-3,3]+ pm[3]*X_f[118 + i-4,3] \
                 + pm[4]*X_f[118 + i-5,3]
-                
     #take values only from time point 110
     X_f = X_f[109:,:]
-    
     #Plots
     t = [i for i in range(110, 129)]
     plt.figure(figsize = (10,7))
@@ -721,7 +692,6 @@ def question4(X):
     plt.xlabel('Time point t')
     plt.ylabel('X_t / X_t(l)')
     plt.show()
-    
     #summarise forecast and actual values into pandas Data Frame
     data_f = pd.DataFrame(X_f, index = ['t = '+str(i) for i in range(110,129)],
                           columns = ['Actual values', 'Yule-Walker', 
